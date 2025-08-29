@@ -163,10 +163,6 @@ const CartPage = () => {
         paymentMethod: "COD"
       };
 
-      // Debug: Check what address is being sent
-      console.log("Sending address data:", finalAddressData);
-      console.log("Full order data:", orderData, orderItems);
-
       const response = await axios.post(`${API}/order/place`, orderData, {
         headers: {
           Authorization: `Bearer ${auth.token}`,
@@ -177,6 +173,16 @@ const CartPage = () => {
       if (response.data.success) {
         clearCart();
         toast.success("Order placed successfully! 🎉");
+
+        // 🔹 Push event to GTM dataLayer for conversion tracking
+        window.dataLayer = window.dataLayer || [];
+        window.dataLayer.push({
+          event: "purchase",                // Custom event name for GTM
+          transaction_id: response.data.orderId || "",  // if backend returns orderId
+          value: total,                     // order total
+          currency: "INR"
+        });
+
         navigate("/my-order");
       } else {
         throw new Error(response.data.message || "Failed to place order");
@@ -189,6 +195,7 @@ const CartPage = () => {
       setCheckoutLoading(false);
     }
   };
+
 
   const handleCheckout = () => {
     if (!auth?.token) {
